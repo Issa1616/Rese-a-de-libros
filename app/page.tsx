@@ -1,103 +1,207 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect } from "react";
 
-export default function Home() {
+type Reseña = {
+  id: string;
+  libroId: string;
+  usuario: string;
+  calificacion: number;
+  comentario: string;
+  votos: number;
+};
+
+//Información del libro Google Books
+type Libro = any;
+
+// Barra de búsqueda de libros
+const Buscador = ({ onBuscar }: { onBuscar: (q: string) => void }) => {
+  const [q, setQ] = useState("");
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        console.log("Buscando:", q); // debug
+        onBuscar(q);
+      }}
+      className="flex gap-3 mb-6"
+    >
+      <input
+        type="text"
+        placeholder="Buscar libro..."
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        className="flex-1 px-4 py-2 border rounded-xl text-black bg-white"
+      />
+      <button
+        type="submit"
+        className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+      >
+        Buscar
+      </button>
+    </form>
+  );
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+//Información de los libro y agregar reseñas
+const TarjetaLibro = ({ libro }: { libro: Libro }) => {
+  const [reseñas, setReseñas] = useState<Reseña[]>([]);
+  const [usuario, setUsuario] = useState("");
+  const [comentario, setComentario] = useState("");
+  const [calificacion, setCalificacion] = useState(5);
+
+  useEffect(() => {
+    const guardadas = localStorage.getItem(`reseñas-${libro.id}`);
+    if (guardadas) setReseñas(JSON.parse(guardadas));
+  }, [libro.id]);
+
+  const guardar = (arr: Reseña[]) => {
+    setReseñas(arr);
+    localStorage.setItem(`reseñas-${libro.id}`, JSON.stringify(arr));
+  };
+
+  const agregar = () => {
+    if (!usuario || !comentario) return;
+    const nueva: Reseña = {
+      id: Date.now().toString(),
+      libroId: libro.id,
+      usuario,
+      calificacion,
+      comentario,
+      votos: 0,
+    };
+    guardar([...reseñas, nueva]);
+    setUsuario("");
+    setComentario("");
+  };
+
+  const votar = (id: string, delta: number) => {
+    const arr = reseñas.map((r) =>
+      r.id === id ? { ...r, votos: r.votos + delta } : r
+    );
+    guardar(arr);
+  };
+
+  return (
+    <div className="border rounded-lg shadow p-4 bg-white">
+      <h3 className="text-lg font-bold text-blue-700">
+        {libro.volumeInfo.title}
+      </h3>
+
+      {libro.volumeInfo.imageLinks?.thumbnail && (
+        <img
+          src={libro.volumeInfo.imageLinks.thumbnail}
+          alt={libro.volumeInfo.title}
+          className="my-2 rounded"
+        />
+      )}
+
+      {/* Autor en negro */}
+      <p className="text-black">
+        <b>Autor:</b>{" "}
+        {libro.volumeInfo.authors?.join(", ") || "Desconocido"}
+      </p>
+
+      {/* Descripción más legible */}
+      <p className="text-gray-800 text-sm mt-1">
+        {libro.volumeInfo.description
+          ? libro.volumeInfo.description.slice(0, 150) + "..."
+          : "Sin descripción"}
+      </p>
+
+      <div className="mt-3 space-y-2">
+        {reseñas.length === 0 && (
+          <p className="text-gray-500 italic">No hay reseñas</p>
+        )}
+        {reseñas.map((r) => (
+          <div key={r.id} className="border p-2 rounded bg-gray-50">
+            <p className="font-medium text-blue-600">
+              {r.usuario} — {r.calificacion} ⭐
+            </p>
+            {/* Comentario en negro */}
+            <p className="text-black">{r.comentario}</p>
+            <div className="flex gap-2 text-sm mt-1">
+              <button
+                onClick={() => votar(r.id, +1)}
+                className="text-green-600"
+              >
+                👍
+              </button>
+              <button
+                onClick={() => votar(r.id, -1)}
+                className="text-red-600"
+              >
+                👎
+              </button>
+              <span>{r.votos} votos</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        <input
+          type="text"
+          placeholder="Tu nombre"
+          value={usuario}
+          onChange={(e) => setUsuario(e.target.value)}
+          className="w-full px-2 py-1 border rounded text-black"
+        />
+        <textarea
+          placeholder="Escribe tu reseña"
+          value={comentario}
+          onChange={(e) => setComentario(e.target.value)}
+          className="w-full px-2 py-1 border rounded text-black"
+        />
+        <div className="flex gap-2 items-center">
+          <select
+            value={calificacion}
+            onChange={(e) => setCalificacion(Number(e.target.value))}
+            className="px-2 py-1 border rounded text-black"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>
+                {n} ⭐
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={agregar}
+            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            Read our docs
-          </a>
+            Enviar
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
+  );
+};
+//Página principal
+export default function Page() {
+  const [libros, setLibros] = useState<Libro[]>([]);
+
+  const buscar = async (q: string) => {
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${q}`
+    );
+    const data = await res.json();
+    console.log("Resultados:", data.items); // debug
+    setLibros(data.items || []);
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-2xl font-bold text-center mb-6 text-blue-700">
+        App de Reseñas de Libros
+      </h1>
+      <div className="max-w-2xl mx-auto">
+        <Buscador onBuscar={buscar} />
+        <div className="grid gap-5">
+          {libros.map((libro) => (
+            <TarjetaLibro key={libro.id} libro={libro} />
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
