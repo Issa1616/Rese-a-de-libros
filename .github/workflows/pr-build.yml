@@ -1,0 +1,14 @@
+GNU nano 8.3                                                                              .github/workflows/pr-build.yml                                                                              Modified
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build.log
+
+      - name: Upload build log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+
+
+
