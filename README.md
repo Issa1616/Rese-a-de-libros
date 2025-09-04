@@ -6,7 +6,7 @@ https://rese-a-de-libros.vercel.app/
 Repositorio
 https://github.com/Issa1616/Rese-a-de-libros.git
 
-Documentacion
+Documentacionn
     Para el deploy local
         1.Clonar el repositorio
             git clone https://github.com/Issa1616/Rese-a-de-libros.git
