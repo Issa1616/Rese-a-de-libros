@@ -10,7 +10,6 @@ type Reseña = {
   votos: number;
 };
 
-//Información del libro Google Books
 type Libro = any;
 
 // Barra de búsqueda de libros
@@ -21,9 +20,9 @@ const Buscador = ({ onBuscar }: { onBuscar: (q: string) => void }) => {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        console.log("Buscando:", q); // debug
         onBuscar(q);
       }}
+      aria-label="Buscar libro"
       className="flex gap-3 mb-6"
     >
       <input
@@ -43,7 +42,7 @@ const Buscador = ({ onBuscar }: { onBuscar: (q: string) => void }) => {
   );
 };
 
-//Información de los libro y agregar reseñas
+// Tarjeta de libro y reseñas
 const TarjetaLibro = ({ libro }: { libro: Libro }) => {
   const [reseñas, setReseñas] = useState<Reseña[]>([]);
   const [usuario, setUsuario] = useState("");
@@ -96,50 +95,44 @@ const TarjetaLibro = ({ libro }: { libro: Libro }) => {
         />
       )}
 
-      {/* Autor en negro */}
       <p className="text-black">
         <b>Autor:</b>{" "}
         {libro.volumeInfo.authors?.join(", ") || "Desconocido"}
       </p>
 
-      {/* Descripción más legible */}
       <p className="text-gray-800 text-sm mt-1">
         {libro.volumeInfo.description
           ? libro.volumeInfo.description.slice(0, 150) + "..."
           : "Sin descripción"}
       </p>
 
-      <div className="mt-3 space-y-2">
-        {reseñas.length === 0 && (
+      {/* Contenedor solo de reseñas */}
+      <div className="mt-3 space-y-2" data-testid="reseñas-lista">
+        {reseñas.length === 0 ? (
           <p className="text-gray-500 italic">No hay reseñas</p>
-        )}
-        {reseñas.map((r) => (
-          <div key={r.id} className="border p-2 rounded bg-gray-50">
-            <p className="font-medium text-blue-600">
-              {r.usuario} — {r.calificacion} ⭐
-            </p>
-            {/* Comentario en negro */}
-            <p className="text-black">{r.comentario}</p>
-            <div className="flex gap-2 text-sm mt-1">
-              <button
-                onClick={() => votar(r.id, +1)}
-                className="text-green-600"
-              >
-                👍
-              </button>
-              <button
-                onClick={() => votar(r.id, -1)}
-                className="text-red-600"
-              >
-                👎
-              </button>
-              <span>{r.votos} votos</span>
+        ) : (
+          reseñas.map((r) => (
+            <div key={r.id} className="border p-2 rounded bg-gray-50">
+              <p className="font-medium text-blue-600">
+                {r.usuario} — {r.calificacion} ⭐
+              </p>
+              <p className="text-black">{r.comentario}</p>
+              <div className="flex gap-2 text-sm mt-1">
+                <button onClick={() => votar(r.id, +1)} className="text-green-600">
+                  👍
+                </button>
+                <button onClick={() => votar(r.id, -1)} className="text-red-600">
+                  👎
+                </button>
+                <span>{r.votos} votos</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      <div className="mt-3 space-y-2">
+      {/* Contenedor de inputs */}
+      <div className="mt-3 space-y-2" data-testid="reseñas-contenedor">
         <input
           type="text"
           placeholder="Tu nombre"
@@ -176,7 +169,8 @@ const TarjetaLibro = ({ libro }: { libro: Libro }) => {
     </div>
   );
 };
-//Página principal
+
+// Página principal
 export default function Page() {
   const [libros, setLibros] = useState<Libro[]>([]);
 
@@ -185,7 +179,6 @@ export default function Page() {
       `https://www.googleapis.com/books/v1/volumes?q=${q}`
     );
     const data = await res.json();
-    console.log("Resultados:", data.items); // debug
     setLibros(data.items || []);
   };
 
