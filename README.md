@@ -7,6 +7,7 @@ Repositorio
 https://github.com/Issa1616/Rese-a-de-libros.git
 
 Documentacionn
+
     Para el deploy local
         1.Clonar el repositorio
             git clone https://github.com/Issa1616/Rese-a-de-libros.git
@@ -29,7 +30,9 @@ Documentacionn
             docker run -p 3000:3000 mi-app-nextjs
         3. Abrir en el navegador
             http://localhost:3000
+
 Demostracion
+
     https://github.com/Issa1616/Rese-a-de-libros/actions/runs/17451814091
     https://github.com/Issa1616/Rese-a-de-libros/tree/refs/heads/feature/prtests
     https://github.com/Issa1616/Rese-a-de-libros/actions/runs/17451203817
